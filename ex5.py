@@ -52,7 +52,7 @@ def create_least_squares(x,y):
 
 def main():
     TESTING_BOUNDARIES = (-pi,pi)
-    x_step = 0.1
+    x_step = 0.01
     x = TESTING_BOUNDARIES[0]
     digits = 200
     x_values = []
@@ -62,7 +62,8 @@ def main():
 
     error_sum = 0
     count = 0
-    while x<=TESTING_BOUNDARIES[1]:
+    while x<=TESTING_BOUNDARIES[1] and\
+            count<digits:
         x_values.append(x)
         sin_x = Decimal(sin(x))
         y_lib.append(sin_x)
@@ -108,7 +109,8 @@ def main():
 
     error_sum = 0
     count = 0
-    while x<=TESTING_BOUNDARIES[1]:
+    while x<=TESTING_BOUNDARIES[1] and\
+            count<digits:
         sin_x_approximated = spline(x)
         y_approximated.append(sin_x_approximated)
         x_values.append(x)
@@ -144,12 +146,13 @@ def main():
 
     x = TESTING_BOUNDARIES[0]
     least_squares = create_least_squares(x_values,y_lib)
-    x_step = 0.001
+    x_step = 0.01
     x_values = []
 
     error_sum = 0
     count = 0
-    while x<=TESTING_BOUNDARIES[1]:
+    while x<=TESTING_BOUNDARIES[1] and\
+            count<digits:
         sin_x_approximated = least_squares(x)
         y_approximated.append(sin_x_approximated)
         x_values.append(x)
