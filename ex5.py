@@ -18,35 +18,55 @@ def sin_polynomial(x:float,digits:int):
 
     return y
 
-def create_least_squares(x,y):
-    if len(x) != len(y):
-        raise Exception("Array lengths are different")
+def create_polynomial(x_values,y_values,polynomial_degree=2):
+    '''
+        Creates matrixes to be solved
+    '''
 
-    coefitients = []
-    for i in range(len(x)-1):
-        x0 = x[i]
-        x1 = x[i+1]
-        y0 = y[i]
-        y1 = y[i+1]
-        x_sum = x0 + x1
-        y_sum = y0 + y1
-        xy_sum = (x0*y0) + (x1*y1)
-        x_square_sum = (x0*x0) + (x1*x1)
-        
-        a = ((2*xy_sum) - (x_sum*y_sum))\
-                /((2*x_square_sum) - (x_sum*x_sum))
+    if polynomial_degree<1:
+        raise Exception("Bad degree")
 
-        b = (y_sum - (a*x_sum))/2
+    coefs = np.zeros((polynomial_degree+1,polynomial_degree+1),
+                        dtype=np.float)
 
-        coefitients.append((a,b))
+    results = np.zeros((polynomial_degree+1,),dtype=np.float)
 
-    def least_squares(x_new):
-        index = min(bisect.bisect(x, x_new)-1, len(x)-2)
-        a,b = coefitients[index]
-        y = (a*x_new) + b
+
+    c_sum = len(x_values)
+    coefs[polynomial_degree][polynomial_degree] = c_sum
+    for i in range(1,polynomial_degree+1):
+        sm = sum(pow(x,i) for x in x_values)
+        coefs[polynomial_degree][polynomial_degree-i] = sm
+
+    y_sum = sum(y_values)
+    results[polynomial_degree] = y_sum
+
+    c = 1
+    for count in range(polynomial_degree-1,-1,-1):
+        for i in range(0,polynomial_degree+1):
+            sm = sum(pow(x,c+i) for x in x_values)
+            coefs[count][polynomial_degree-i] = sm
+
+        y_sum = sum(y*pow(x,c) for x,y in zip(x_values,y_values))
+        results[count] = y_sum  
+
+        c += 1          
+
+
+    return (coefs,results)
+
+def get_least_square_solver(polynomial,result):
+    degree = polynomial.shape[0]
+    coefficients = np.flip(np.linalg.solve(polynomial,result))
+
+    def approximator(x:float):
+        y = coefficients[0]
+        for k in range(1,degree):
+            y += coefficients[k]*pow(x,k)
+
         return y
 
-    return least_squares
+    return approximator
         
 
 
@@ -145,7 +165,8 @@ def main():
     plt.plot(x_values, y_lib, color='r', label='sin lib')
 
     x = TESTING_BOUNDARIES[0]
-    least_squares = create_least_squares(x_values,y_lib)
+    polynomial,res = create_polynomial(x_values,y_lib,3)
+    least_squares = get_least_square_solver(polynomial,res)
     x_step = 0.01
     x_values = []
 
